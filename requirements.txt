@@ -1,3 +1,4 @@
+a2wsgi==1.10.8
 backports.tarfile==1.2.0
 email-validator==2.2.0
 fastapi-cache2==0.2.2

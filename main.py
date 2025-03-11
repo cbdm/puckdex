@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import AsyncIterator, Dict, List
 
 import requests
+import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -157,3 +158,7 @@ async def get_home_calendar(team_abbrev: str) -> Response:
 async def get_away_calendar(team_abbrev: str) -> Response:
     """Return an .ics calendar with the away games of the given team in the current NHL season."""
     return await create_fresh_calendar(team_abbrev, CalendarType.AWAY)
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
