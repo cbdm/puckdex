@@ -1,8 +1,7 @@
 import json
-from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from os.path import abspath, dirname, join
-from typing import AsyncIterator, Dict, List
+from typing import Dict, List
 
 import requests
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -10,16 +9,10 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from ics import Calendar, Event
 
+from dict_cache import cache_this
 from utils import ABBREV_TO_NAME_MAP, SCHEDULE_API_URL, CalendarType, Game, Schedule
 
-
-@asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    """Initialize resources when the app starts."""
-    yield
-
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 # Use the absolute path for the templates folder so the webserver can find it.
 templates = Jinja2Templates(directory=join(dirname(abspath(__file__)), "templates"))
@@ -35,7 +28,8 @@ async def index(request: Request):
     )
 
 
-# TODO: Cache requests to the NHL API so we don't have to fetch a schedule for each request.
+# Cache reponses from the NHL API so we don't have to fetch a schedule for each request.
+@cache_this
 async def _fetch_schedule(team_abbrev: str) -> Dict:
     """Fetch the team schedule from the NHL API and parse the JSON response into a dict."""
     response = requests.get(
