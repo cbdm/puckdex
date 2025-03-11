@@ -74,6 +74,11 @@ async def _parse_schedule(team_abbrev: str, data: Dict) -> Schedule:
                 ended=is_over,
                 home_score=game["homeTeam"]["score"] if is_over else None,
                 away_score=game["awayTeam"]["score"] if is_over else None,
+                venue=game.get("venue", {}).get("default"),
+                where_to_watch=[
+                    f"[{b['countryCode']}] {b['network']}"
+                    for b in game.get("tvBroadcasts", [])
+                ],
             )
         )
 
@@ -113,11 +118,19 @@ async def create_fresh_calendar(team_abbrev: str, cal_type: CalendarType) -> Res
         away_score = f" ({game.away_score})" if game.ended else ""
         game_info = f"{away_team}{away_score} @ {home_score}{home_team}"
 
+        # Format extra information
+        extra_info = ""
+        if game.venue:
+            extra_info += f"Venue: {game.venue}\n"
+        if game.where_to_watch:
+            extra_info += f"Where to watch: {', '.join(game.where_to_watch)}\n"
+
         # Create calendar event.
         event = Event()
         event.name = game_info
         event.begin = game.start_utc_timestamp
         event.duration = game.length
+        event.description = extra_info.strip()
 
         # Add event to calendar.
         cal.events.add(event)

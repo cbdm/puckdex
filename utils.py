@@ -60,6 +60,8 @@ class Game(BaseModel):
     ended: bool = False
     home_score: Optional[int] = None
     away_score: Optional[int] = None
+    venue: Optional[str] = None
+    where_to_watch: Optional[List[str]] = None
 
 
 class Schedule(BaseModel):
