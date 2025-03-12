@@ -40,15 +40,15 @@ def cache_this(func) -> Callable[[Any], Any]:
 
     async def wrapper(*args, **kwargs):
         key = (func.__name__, f"{args}", f"{kwargs}")
-        logger.info("Checking cache for '%s'", key)
+        logger.warning("Checking cache for '%s'", key)
         # Check if this method call has been cached.
         entry = cache.get(key)
         if entry:
-            logger.info("Cache entry found for '%s'", key)
+            logger.warning("Cache entry found for '%s'", key)
             # Check if the cache entry is still fresh.
             if freshness >= (datetime.now(timezone.utc) - entry.timestamp):
                 # If it is, return the old result.
-                logger.info(
+                logger.warning(
                     "Cache entry is fresh for '%s' (cached on %s); returning it.",
                     key,
                     entry.timestamp.isoformat(),
@@ -56,7 +56,7 @@ def cache_this(func) -> Callable[[Any], Any]:
                 return entry.data
 
         # If there is no fresh cache entry, call the function to get a new result.
-        logger.info("No fresh cache entry for '%s'; calling original function.", key)
+        logger.warning("No fresh cache entry for '%s'; calling original function.", key)
         try:
             new_result = await func(*args, **kwargs)
 
@@ -71,7 +71,7 @@ def cache_this(func) -> Callable[[Any], Any]:
 
         # Cache the new result and return it.
         cache.set(key, new_result)
-        logger.info("Updated cache with new results for '%s'.", key)
+        logger.warning("Updated cache with new results for '%s'.", key)
         return new_result
 
     return wrapper
