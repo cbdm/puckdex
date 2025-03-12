@@ -1,13 +1,21 @@
 import logging
 from datetime import timedelta
 from enum import Enum
+from os.path import abspath, dirname, join
 from typing import List, Optional
 
 from pydantic import BaseModel
 
 # Configure logging message format.
+LOGGER_FORMAT = "%(name)s %(asctime)s %(levelname)s %(message)s"
+LOGGER_LEVEL = logging.INFO
+LOGGER_FILE = join(dirname(abspath(__file__)), "nhl-calendar.log")
 logging.basicConfig(
-    format="%(name)s %(asctime)s %(levelname)s %(message)s", level=logging.INFO
+    format=LOGGER_FORMAT,
+    level=LOGGER_LEVEL,
+    filename=LOGGER_FILE,
+    filemode="a",
+    encoding="utf-8",
 )
 
 # URL for the NHL API that provides team's schedules;
