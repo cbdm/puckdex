@@ -38,7 +38,7 @@ def cache_this(func) -> Callable[[Any], Any]:
     freshness: timedelta = UPDATE_FREQ
 
     async def wrapper(*args, **kwargs):
-        key = (func.__name__, f"{args=}", f"{kwargs=}")
+        key = (func.__name__, f"{args}", f"{kwargs}")
         logger.info("Checking cache for '%s'", key)
         # Check if this method call has been cached.
         entry = cache.get(key)
@@ -47,12 +47,27 @@ def cache_this(func) -> Callable[[Any], Any]:
             # Check if the cache entry is still fresh.
             if freshness >= (datetime.now(timezone.utc) - entry.timestamp):
                 # If it is, return the old result.
-                logger.info("Cache entry is fresh for '%s'; returning it.", key)
+                logger.info(
+                    "Cache entry is fresh for '%s' (cached on %s); returning it.",
+                    key,
+                    entry.timestamp.isoformat(),
+                )
                 return entry.data
 
         # If there is no fresh cache entry, call the function to get a new result.
         logger.info("No fresh cache entry for '%s'; calling original function.", key)
-        new_result = await func(*args, **kwargs)
+        try:
+            new_result = await func(*args, **kwargs)
+
+        except Exception as e:
+            logger.error("Error calling original function ('%s'): %s", key, e)
+            if entry:
+                logger.warning("Returning non-fresh cache entry for '%s'", key)
+                return entry.data
+            else:
+                logger.error("No entry exists for '%s', passing exception along.", key)
+                raise e
+
         # Cache the new result and return it.
         cache.set(key, new_result)
         logger.info("Updated cache with new results for '%s'.", key)
