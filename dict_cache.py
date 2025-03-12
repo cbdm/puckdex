@@ -60,7 +60,7 @@ def cache_this(func) -> Callable[[Any], Any]:
             new_result = await func(*args, **kwargs)
 
         except Exception as e:
-            logger.error("Error calling original function ('%s'): %s", key, e)
+            logger.exception("Error calling original function ('%s'): %s", key, e)
             if entry:
                 logger.warning("Returning non-fresh cache entry for '%s'", key)
                 return entry.data
