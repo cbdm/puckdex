@@ -9,14 +9,7 @@ from pydantic import BaseModel
 # Configure logging message format.
 LOGGER_FORMAT = "%(name)s %(asctime)s %(levelname)s %(message)s"
 LOGGER_LEVEL = logging.INFO
-LOGGER_FILE = join(dirname(abspath(__file__)), "puckdex.log")
-logging.basicConfig(
-    format=LOGGER_FORMAT,
-    level=LOGGER_LEVEL,
-    filename=LOGGER_FILE,
-    filemode="a",
-    encoding="utf-8",
-)
+logging.basicConfig(format=LOGGER_FORMAT, level=LOGGER_LEVEL)
 
 # URL for the NHL API that provides team's schedules;
 # ref: https://github.com/Zmalski/NHL-API-Reference

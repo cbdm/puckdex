@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime, timezone
+from os import getenv
 from os.path import abspath, dirname, join
 from typing import Dict, List
 
@@ -18,7 +19,7 @@ app = FastAPI()
 # Use the absolute path for the templates folder so the webserver can find it.
 templates = Jinja2Templates(directory=join(dirname(abspath(__file__)), "templates"))
 # Create a logger to help debug future issues.
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(getenv("LOGGER_NAME", __name__))
 
 
 @app.get("/", response_class=HTMLResponse)

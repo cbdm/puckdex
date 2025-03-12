@@ -1,12 +1,13 @@
 import logging
 from datetime import datetime, timedelta, timezone
+from os import getenv
 from typing import Any, Callable, Dict, Optional
 
 from pydantic import BaseModel
 
 from utils import UPDATE_FREQ
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(getenv("LOGGER_NAME", __name__))
 
 
 class CacheEntry(BaseModel):
