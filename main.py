@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime, timezone
 from os.path import abspath, dirname, join
 from typing import Dict, List
@@ -16,6 +17,8 @@ app = FastAPI()
 
 # Use the absolute path for the templates folder so the webserver can find it.
 templates = Jinja2Templates(directory=join(dirname(abspath(__file__)), "templates"))
+# Create a logger to help debug future issues.
+logger = logging.getLogger(__name__)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -32,6 +35,7 @@ async def index(request: Request):
 @cache_this
 async def _fetch_schedule(team_abbrev: str) -> Dict:
     """Fetch the team schedule from the NHL API and parse the JSON response into a dict."""
+    logger.info("Requesting schedule for '%s' from NHL API.", team_abbrev)
     response = requests.get(
         SCHEDULE_API_URL.format(team_abbrev=team_abbrev), timeout=120
     )
@@ -45,6 +49,8 @@ async def _fetch_schedule(team_abbrev: str) -> Dict:
 
 async def _parse_schedule(team_abbrev: str, data: Dict) -> Schedule:
     """Parse the schedule information from the NHL API JSON response."""
+    logger.info("Parsing NHL response to create schedule for '%s'", team_abbrev)
+
     games: List[Game] = []
     for game in data["games"]:
 
@@ -92,6 +98,7 @@ async def _parse_schedule(team_abbrev: str, data: Dict) -> Schedule:
 
 async def create_fresh_calendar(team_abbrev: str, cal_type: CalendarType) -> Response:
     """Create and return an ics calendar with the given team's schedule."""
+    logger.info("Creating fresh %s calendar for '%s'", cal_type.name, team_abbrev)
     if team_abbrev not in ABBREV_TO_NAME_MAP:
         raise HTTPException(status_code=404, detail=f"Team '{team_abbrev}' not found")
 
@@ -143,16 +150,19 @@ async def create_fresh_calendar(team_abbrev: str, cal_type: CalendarType) -> Res
 @app.get("/full/{team_abbrev}.ics", response_class=FileResponse)
 async def get_full_calendar(team_abbrev: str) -> Response:
     """Return an .ics calendar with all games of the given team in the current NHL season."""
+    logger.info("Received request for full calendar for '%s'", team_abbrev)
     return await create_fresh_calendar(team_abbrev, CalendarType.FULL)
 
 
 @app.get("/home/{team_abbrev}.ics", response_class=FileResponse)
 async def get_home_calendar(team_abbrev: str) -> Response:
     """Return an .ics calendar with the home games of the given team in the current NHL season."""
+    logger.info("Received request for home calendar for '%s'", team_abbrev)
     return await create_fresh_calendar(team_abbrev, CalendarType.HOME)
 
 
 @app.get("/away/{team_abbrev}.ics", response_class=FileResponse)
 async def get_away_calendar(team_abbrev: str) -> Response:
     """Return an .ics calendar with the away games of the given team in the current NHL season."""
+    logger.info("Received request for away calendar for '%s'", team_abbrev)
     return await create_fresh_calendar(team_abbrev, CalendarType.AWAY)

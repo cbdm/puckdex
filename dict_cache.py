@@ -1,9 +1,12 @@
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Dict, Optional
 
 from pydantic import BaseModel
 
 from utils import UPDATE_FREQ
+
+logger = logging.getLogger(__name__)
 
 
 class CacheEntry(BaseModel):
@@ -36,18 +39,23 @@ def cache_this(func) -> Callable[[Any], Any]:
 
     async def wrapper(*args, **kwargs):
         key = (func.__name__, f"{args=}", f"{kwargs=}")
+        logger.info("Checking cache for '%s'", key)
         # Check if this method call has been cached.
         entry = cache.get(key)
         if entry:
+            logger.info("Cache entry found for '%s'", key)
             # Check if the cache entry is still fresh.
             if freshness >= (datetime.now(timezone.utc) - entry.timestamp):
                 # If it is, return the old result.
+                logger.info("Cache entry is fresh for '%s'; returning it.", key)
                 return entry.data
 
         # If there is no fresh cache entry, call the function to get a new result.
+        logger.info("No fresh cache entry for '%s'; calling original function.", key)
         new_result = await func(*args, **kwargs)
         # Cache the new result and return it.
         cache.set(key, new_result)
+        logger.info("Updated cache with new results for '%s'.", key)
         return new_result
 
     return wrapper

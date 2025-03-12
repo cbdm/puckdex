@@ -1,8 +1,12 @@
+import logging
 from datetime import timedelta
 from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel
+
+# Configure logging message format.
+logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
 # URL for the NHL API that provides team's schedules;
 # ref: https://github.com/Zmalski/NHL-API-Reference
