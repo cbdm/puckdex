@@ -6,7 +6,9 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 # Configure logging message format.
-logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+logging.basicConfig(
+    format="%(name)s %(asctime)s %(levelname)s %(message)s", level=logging.INFO
+)
 
 # URL for the NHL API that provides team's schedules;
 # ref: https://github.com/Zmalski/NHL-API-Reference
