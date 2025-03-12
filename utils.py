@@ -9,7 +9,7 @@ from pydantic import BaseModel
 # Configure logging message format.
 LOGGER_FORMAT = "%(name)s %(asctime)s %(levelname)s %(message)s"
 LOGGER_LEVEL = logging.INFO
-LOGGER_FILE = join(dirname(abspath(__file__)), "nhl-calendar.log")
+LOGGER_FILE = join(dirname(abspath(__file__)), "puckdex.log")
 logging.basicConfig(
     format=LOGGER_FORMAT,
     level=LOGGER_LEVEL,
