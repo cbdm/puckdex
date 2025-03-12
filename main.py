@@ -120,8 +120,6 @@ async def create_fresh_calendar(team_abbrev: str, cal_type: CalendarType) -> Res
 
         # Format extra information
         extra_info = ""
-        if game.venue:
-            extra_info += f"Venue: {game.venue}\n"
         if game.where_to_watch:
             extra_info += f"Where to watch: {', '.join(game.where_to_watch)}\n"
 
@@ -130,7 +128,10 @@ async def create_fresh_calendar(team_abbrev: str, cal_type: CalendarType) -> Res
         event.name = game_info
         event.begin = game.start_utc_timestamp
         event.duration = game.length
-        event.description = extra_info.strip()
+        if game.venue:
+            event.location = game.venue
+        if extra_info:
+            event.description = extra_info.strip()
 
         # Add event to calendar.
         cal.events.add(event)
