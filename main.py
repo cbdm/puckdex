@@ -226,3 +226,35 @@ async def get_next_game(calendar_type: CalendarType, team: TeamAbbrev) -> Game:
         away_team_name="To Be Determined",
         start_utc_timestamp="2100-01-01T00:00:00Z",
     )
+
+
+@app.get("/last/{calendar_type}/{team}")
+async def get_last_game(calendar_type: CalendarType, team: TeamAbbrev) -> Game:
+    """Return information for the most recent game in the team's full/home/away calendar."""
+    logger.warning("Received request for the last %s game for %s", calendar_type, team)
+
+    # Get a current schedule for the team.
+    schedule = await _create_fresh_schedule(team)
+    filtered_schedule = await _filter_schedule(schedule, calendar_type)
+
+    # Create a dummy game in case we don't find a past game in the schedule.
+    last_game = Game(
+        home_team_abbrev=team.name,
+        home_team_name=ABBREV_TO_NAME_MAP[team.name],
+        away_team_abbrev="???",
+        away_team_name="Unknown",
+        start_utc_timestamp="1970-01-01T00:00:00Z",
+    )
+
+    # Parse through schedule and find the past game that is closest to current date.
+    # IMPORTANT: This assumes the schedule is ordered!
+    #            As of 2025-03-13, the NHL API response is already ordered.
+    now = datetime.now(timezone.utc)
+    i = 0
+    while i < len(filtered_schedule.games) and now > datetime.fromisoformat(
+        filtered_schedule.games[i].start_utc_timestamp
+    ):
+        last_game = filtered_schedule.games[i]
+        i += 1
+
+    return last_game
