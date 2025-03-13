@@ -160,22 +160,10 @@ async def create_fresh_calendar(team_abbrev: str, cal_type: CalendarType) -> Res
     return Response(content=cal.serialize(), media_type="text/calendar")
 
 
-@app.get("/full/{team_abbrev}.ics", response_class=FileResponse)
-async def get_full_calendar(team_abbrev: str) -> Response:
-    """Return an .ics calendar with all games of the given team in the current NHL season."""
-    logger.warning("Received request for full calendar for '%s'", team_abbrev)
-    return await create_fresh_calendar(team_abbrev, CalendarType.FULL)
-
-
-@app.get("/home/{team_abbrev}.ics", response_class=FileResponse)
-async def get_home_calendar(team_abbrev: str) -> Response:
-    """Return an .ics calendar with the home games of the given team in the current NHL season."""
-    logger.warning("Received request for home calendar for '%s'", team_abbrev)
-    return await create_fresh_calendar(team_abbrev, CalendarType.HOME)
-
-
-@app.get("/away/{team_abbrev}.ics", response_class=FileResponse)
-async def get_away_calendar(team_abbrev: str) -> Response:
-    """Return an .ics calendar with the away games of the given team in the current NHL season."""
-    logger.warning("Received request for away calendar for '%s'", team_abbrev)
-    return await create_fresh_calendar(team_abbrev, CalendarType.AWAY)
+@app.get("/{calendar_type}/{team_abbrev}.ics", response_class=FileResponse)
+async def get_calendar(calendar_type: CalendarType, team_abbrev: str) -> Response:
+    """Return an .ics calendar of the specified type and team in the current NHL season."""
+    logger.warning(
+        "Received request for %s calendar for '%s'", calendar_type.name, team_abbrev
+    )
+    return await create_fresh_calendar(team_abbrev, calendar_type)

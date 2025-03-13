@@ -71,7 +71,7 @@
                 <br/>
                 If you paste the contents of your clipboard somewhere they should have:
                 <br/>
-                <code>{{ url_for("get_home_calendar", team_abbrev="CAR") }}</code>
+                <code>{{ url_for("get_calendar", calendar_type="home", team_abbrev="CAR") }}</code>
                 <br/><br/>
                 The beginning should always be the same (<code>{{ url_for("index") }}</code>), and there are two parts that will change if you select a team different than the Canes and a calendar different than home-only games:
                 <ol>
@@ -90,7 +90,7 @@
             </h2>
             <div id="googleCalExample" class="accordion-collapse collapse" data-bs-parent="#calendarTutorials">
               <div class="accordion-body">
-                At this part, you should already have a calendar URL you want to use from the previous step. For this example, we will use the URL created on our previous example: <code>{{ url_for("get_home_calendar", team_abbrev="CAR") }}</code>
+                At this part, you should already have a calendar URL you want to use from the previous step. For this example, we will use the URL created on our previous example: <code>{{ url_for("get_calendar", calendar_type="home", team_abbrev="CAR") }}</code>
                 <br/>
                 This URL will contain only the home games for the Carolina Hurricanes.
                 <br/>

@@ -80,9 +80,9 @@ class Schedule(BaseModel):
     timestamp: str
 
 
-class CalendarType(Enum):
+class CalendarType(str, Enum):
     """Possible types of calendars served."""
 
-    FULL = 1
-    HOME = 2
-    AWAY = 3
+    FULL = "full"
+    HOME = "home"
+    AWAY = "away"
