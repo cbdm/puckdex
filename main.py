@@ -96,9 +96,9 @@ async def _parse_schedule(team: TeamAbbrev, data: Dict) -> Schedule:
                 away_team_name=away_team_name,
                 start_utc_timestamp=game["startTimeUTC"],
                 ended=is_over,
-                home_score=game["homeTeam"]["score"] if is_over else None,
-                away_score=game["awayTeam"]["score"] if is_over else None,
-                venue=game.get("venue", {}).get("default"),
+                home_score=game["homeTeam"]["score"] if is_over else 0,
+                away_score=game["awayTeam"]["score"] if is_over else 0,
+                venue=game.get("venue", {}).get("default", ""),
                 where_to_watch=[
                     f"[{b['countryCode']}] {b['network']}"
                     for b in game.get("tvBroadcasts", [])

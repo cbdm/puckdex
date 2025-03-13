@@ -1,9 +1,9 @@
 import logging
 from datetime import timedelta
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # Configure logging message format.
 LOGGER_FORMAT = "%(name)s %(asctime)s %(levelname)s %(message)s"
@@ -105,10 +105,10 @@ class Game(BaseModel):
     start_utc_timestamp: str
     length: timedelta = timedelta(hours=3)
     ended: bool = False
-    home_score: Optional[int] = None
-    away_score: Optional[int] = None
-    venue: Optional[str] = None
-    where_to_watch: Optional[List[str]] = None
+    home_score: int = 0
+    away_score: int = 0
+    venue: str = ""
+    where_to_watch: List[str] = Field(default_factory=list)
 
 
 class Schedule(BaseModel):
