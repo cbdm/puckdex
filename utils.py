@@ -55,12 +55,53 @@ ABBREV_TO_NAME_MAP = {
 }
 
 
+class TeamAbbrev(str, Enum):
+    """Available team abbreviations."""
+
+    ANA = "ANA"
+    BOS = "BOS"
+    BUF = "BUF"
+    CAR = "CAR"
+    CBJ = "CBJ"
+    CGY = "CGY"
+    CHI = "CHI"
+    COL = "COL"
+    DAL = "DAL"
+    DET = "DET"
+    EDM = "EDM"
+    FLA = "FLA"
+    LAK = "LAK"
+    MIN = "MIN"
+    MTL = "MTL"
+    NJD = "NJD"
+    NSH = "NSH"
+    NYI = "NYI"
+    NYR = "NYR"
+    OTT = "OTT"
+    PHI = "PHI"
+    PIT = "PIT"
+    SEA = "SEA"
+    SJS = "SJS"
+    STL = "STL"
+    TBL = "TBL"
+    TOR = "TOR"
+    UTA = "UTA"
+    VAN = "VAN"
+    VGK = "VGK"
+    WPG = "WPG"
+    WSH = "WSH"
+
+
 class Game(BaseModel):
     """Holds information for a single game."""
 
-    home_team_abbrev: str
+    home_team_abbrev: (
+        str  # This should be a regular string so we can handle special games.
+    )
     home_team_name: str
-    away_team_abbrev: str
+    away_team_abbrev: (
+        str  # This should be a regular string so we can handle special games.
+    )
     away_team_name: str
     start_utc_timestamp: str
     length: timedelta = timedelta(hours=3)
@@ -74,7 +115,7 @@ class Game(BaseModel):
 class Schedule(BaseModel):
     """Holds information for all games in a season for a team."""
 
-    team_abbrev: str
+    team: TeamAbbrev
     season: int
     games: List[Game]
     timestamp: str

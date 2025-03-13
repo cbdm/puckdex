@@ -13,7 +13,14 @@ from fastapi.templating import Jinja2Templates
 from ics import Calendar, Event
 
 from dict_cache import cache_this
-from utils import ABBREV_TO_NAME_MAP, SCHEDULE_API_URL, CalendarType, Game, Schedule
+from utils import (
+    ABBREV_TO_NAME_MAP,
+    SCHEDULE_API_URL,
+    CalendarType,
+    Game,
+    Schedule,
+    TeamAbbrev,
+)
 
 app = FastAPI()
 
@@ -46,12 +53,10 @@ async def about(request: Request):
 
 # Cache reponses from the NHL API so we don't have to fetch a schedule for each request.
 @cache_this
-async def _fetch_schedule(team_abbrev: str) -> Dict:
+async def _fetch_schedule(team: TeamAbbrev) -> Dict:
     """Fetch the team schedule from the NHL API and parse the JSON response into a dict."""
-    logger.warning("Requesting schedule for '%s' from NHL API.", team_abbrev)
-    response = requests.get(
-        SCHEDULE_API_URL.format(team_abbrev=team_abbrev), timeout=120
-    )
+    logger.warning("Requesting schedule for %s from NHL API.", team.name)
+    response = requests.get(SCHEDULE_API_URL.format(team_abbrev=team.name), timeout=120)
     if not response.status_code == 200:
         raise HTTPException(
             status_code=404,
@@ -60,9 +65,9 @@ async def _fetch_schedule(team_abbrev: str) -> Dict:
     return json.loads(response.text)
 
 
-async def _parse_schedule(team_abbrev: str, data: Dict) -> Schedule:
+async def _parse_schedule(team: TeamAbbrev, data: Dict) -> Schedule:
     """Parse the schedule information from the NHL API JSON response."""
-    logger.warning("Parsing NHL response to create schedule for '%s'", team_abbrev)
+    logger.warning("Parsing NHL response to create schedule for %s", team.name)
 
     games: List[Game] = []
     for game in data["games"]:
@@ -102,32 +107,30 @@ async def _parse_schedule(team_abbrev: str, data: Dict) -> Schedule:
         )
 
     return Schedule(
-        team_abbrev=team_abbrev,
+        team=team,
         season=data["currentSeason"],
         games=games,
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
 
-async def create_fresh_calendar(team_abbrev: str, cal_type: CalendarType) -> Response:
+async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Response:
     """Create and return an ics calendar with the given team's schedule."""
-    logger.warning("Creating fresh %s calendar for '%s'", cal_type.name, team_abbrev)
-    if team_abbrev not in ABBREV_TO_NAME_MAP:
-        raise HTTPException(status_code=404, detail=f"Team '{team_abbrev}' not found")
+    logger.warning("Creating fresh %s calendar for %s", cal_type.name, team.name)
 
     # Create empty calendar.
     cal = Calendar()
 
     # Get schedule data.
-    api_json_response = await _fetch_schedule(team_abbrev)
-    schedule = await _parse_schedule(team_abbrev, api_json_response)  # type: ignore[arg-type]
+    api_json_response = await _fetch_schedule(team)
+    schedule = await _parse_schedule(team, api_json_response)  # type: ignore[arg-type]
 
     # Add one calendar event for each scheduled game.
     for game in schedule.games:
-        if cal_type == CalendarType.HOME and game.home_team_abbrev != team_abbrev:
+        if cal_type == CalendarType.HOME and game.home_team_abbrev != team:
             # Ignore non-home games for home-only calendars.
             continue
-        if cal_type == CalendarType.AWAY and game.away_team_abbrev != team_abbrev:
+        if cal_type == CalendarType.AWAY and game.away_team_abbrev != team:
             # Ignore non-away games for away-only calendars.
             continue
 
@@ -160,10 +163,8 @@ async def create_fresh_calendar(team_abbrev: str, cal_type: CalendarType) -> Res
     return Response(content=cal.serialize(), media_type="text/calendar")
 
 
-@app.get("/{calendar_type}/{team_abbrev}.ics", response_class=FileResponse)
-async def get_calendar(calendar_type: CalendarType, team_abbrev: str) -> Response:
+@app.get("/{calendar_type}/{team}.ics", response_class=FileResponse)
+async def get_calendar(calendar_type: CalendarType, team: TeamAbbrev) -> Response:
     """Return an .ics calendar of the specified type and team in the current NHL season."""
-    logger.warning(
-        "Received request for %s calendar for '%s'", calendar_type.name, team_abbrev
-    )
-    return await create_fresh_calendar(team_abbrev, calendar_type)
+    logger.warning("Received request of %s for %s", calendar_type, team)
+    return await create_fresh_calendar(team, calendar_type)
