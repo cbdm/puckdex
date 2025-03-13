@@ -114,6 +114,42 @@ async def _parse_schedule(team: TeamAbbrev, data: Dict) -> Schedule:
     )
 
 
+async def _create_fresh_schedule(team: TeamAbbrev) -> Schedule:
+    """Create and return a Schedule with current data for the team."""
+    api_json_response = await _fetch_schedule(team)
+    return await _parse_schedule(team, api_json_response)  # type: ignore[arg-type]
+
+
+async def _filter_schedule(s: Schedule, cal_type: CalendarType) -> Schedule:
+    """Filter the given schedule to have only the games that match the calendar type."""
+    if cal_type == CalendarType.FULL:
+        # For complete schedule, no filtering needed.
+        return s
+
+    elif cal_type == CalendarType.HOME:
+        # Ignore non-home games for home-only calendars.
+        return Schedule(
+            team=s.team,
+            season=s.season,
+            timestamp=s.timestamp,
+            # Ignore non-home games for home-only calendars.
+            games=[g for g in s.games if g.home_team_abbrev == s.team],
+        )
+
+    elif cal_type == CalendarType.AWAY:
+        # Ignore non-away games for away-only calendars.
+        return Schedule(
+            team=s.team,
+            season=s.season,
+            timestamp=s.timestamp,
+            games=[g for g in s.games if g.away_team_abbrev == s.team],
+        )
+
+    else:
+        # Should not reach here: pydantic should stop any routes with an invalid value for cal_type.
+        raise HTTPException(404, f"Unknown calendar type: {cal_type}")
+
+
 async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Response:
     """Create and return an ics calendar with the given team's schedule."""
     logger.warning("Creating fresh %s calendar for %s", cal_type.name, team.name)
@@ -122,18 +158,11 @@ async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Res
     cal = Calendar()
 
     # Get schedule data.
-    api_json_response = await _fetch_schedule(team)
-    schedule = await _parse_schedule(team, api_json_response)  # type: ignore[arg-type]
+    schedule = await _create_fresh_schedule(team)
+    filtered_schedule = await _filter_schedule(schedule, cal_type)
 
     # Add one calendar event for each scheduled game.
-    for game in schedule.games:
-        if cal_type == CalendarType.HOME and game.home_team_abbrev != team:
-            # Ignore non-home games for home-only calendars.
-            continue
-        if cal_type == CalendarType.AWAY and game.away_team_abbrev != team:
-            # Ignore non-away games for away-only calendars.
-            continue
-
+    for game in filtered_schedule.games:
         # Format game information.
         home_team = game.home_team_name
         home_score = f"({game.home_score}) " if game.ended else ""
@@ -168,3 +197,32 @@ async def get_calendar(calendar_type: CalendarType, team: TeamAbbrev) -> Respons
     """Return an .ics calendar of the specified type and team in the current NHL season."""
     logger.warning("Received request of %s for %s", calendar_type, team)
     return await create_fresh_calendar(team, calendar_type)
+
+
+@app.get("/next/{calendar_type}/{team}")
+async def get_next_game(calendar_type: CalendarType, team: TeamAbbrev) -> Game:
+    """Return information for the next game in the team's full/home/away calendar."""
+    logger.warning("Received request for the next %s game for %s", calendar_type, team)
+
+    # Get a current schedule for the team.
+    schedule = await _create_fresh_schedule(team)
+    filtered_schedule = await _filter_schedule(schedule, calendar_type)
+
+    # Parse through schedule and find the first game on a future date.
+    # IMPORTANT: This assumes the schedule is ordered!
+    #            As of 2025-03-13, the NHL API response is already ordered.
+    now = datetime.now(timezone.utc)
+    for game in filtered_schedule.games:
+        if datetime.fromisoformat(game.start_utc_timestamp) > now:
+            # Return the first game on a future date.
+            return game
+
+    # There are no games on a future date, we don't know when is the next one.
+    # Return a dummy Game object with TBD for opposing team.
+    return Game(
+        home_team_abbrev=team.name,
+        home_team_name=ABBREV_TO_NAME_MAP[team.name],
+        away_team_abbrev="TBD",
+        away_team_name="To Be Determined",
+        start_utc_timestamp="2100-01-01T00:00:00Z",
+    )
