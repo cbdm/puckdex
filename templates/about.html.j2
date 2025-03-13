@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Puckdex - About</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style> a { color: #c73e3e; }</style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand bg-body-tertiary rounded" aria-label="Navbar">
+      <div class="container-fluid">
+        <div class="collapse navbar-collapse justify-content-md-center" id="mainNavbar">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/about" style="color: #c73e3e">About</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="px-4 py-1 my-5 text-center">
+      <p class="display-4">Puckdex</p>
+      <p class="display-6">About the project</p>
+      <div class="col-lg-7 mx-auto">
+        <p class="lead mb-3">
+          The idea of this project was to provide an easy way to get all the home games of the Hurricanes into my calendar.
+          All options I found had both home and away, but I wanted to have them appear differently.
+          Then I found the NHL API (<a target="_blank" rel="noreferrer noopener" href="https://github.com/Zmalski/NHL-API-Reference">unofficial reference</a>) that can give us each team's schedule and decided to create something similar to <a target="_blank" rel="noreferrer noopener" href="https://footcal.cbdm.app">footcal</a>.
+        </p>
+      </div>
+      <p class="display-6">How to use this website</p>
+      <div class="col-lg-7 mx-auto">
+        <p class="lead mb-3">
+          You can expand the sections below to see examples of how to use one of our calendars.
+        </p>
+        <div class="accordion" id="calendarTutorials">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCalURL" aria-expanded="false" aria-controls="collapseCalURL">
+                Getting the Calendar URL
+              </button>
+            </h2>
+            <div id="collapseCalURL" class="accordion-collapse collapse" data-bs-parent="#calendarTutorials">
+              <div class="accordion-body">
+                <b>Choose the calendar you want</b>
+                <br/>
+                First, you will go to our home page (<a href="{{ url_for("index") }}">{{ url_for("index") }}</a>), scroll to the team you want the calendar, click on the <code>Choose Type</code> button, and select between the three options (full, home-only, away-only).
+                <br/><br/>
+                The image below shows an example where we select the home-only calendar for the Carolina Hurricanes.
+                <figure class="figure">
+                  <img src="/static/img/examples/puckdex-1.png" class="figure-img img-fluid rounded" alt="Figure showing the UI when you click on choose type for one of the teams in our homepage.">
+                  <figcaption class="figure-caption text-end">Choosing the home-only calendar for the Carolina Hurricanes</figcaption>
+                </figure>
+                <b>Confirming you have the URL</b>
+                <br/>
+                After you click on the calendar type for one of the teams, you will see a confirmation message similar to the image below.
+                <figure class="figure">
+                  <img src="/static/img/examples/puckdex-2.png" class="figure-img img-fluid rounded" alt="Figure showing a message confirming the calendar URL has been copied.">
+                  <figcaption class="figure-caption text-end">Confirmation that the calendar URL has been copied</figcaption>
+                </figure>
+                If you see that, you're done! You have successfully found the URL for the calendar you want :)
+                <br/>
+                If you paste the contents of your clipboard somewhere they should have:
+                <br/>
+                <code>{{ url_for("index") }}home/CAR.ics</code>
+                <br/><br/>
+                The beginning should always be the same (<code>{{ url_for("index") }}</code>), and there are two parts that will change if you select a team different than the Canes and a calendar different than home-only games:
+                <ol>
+                  <li>The end will change from <code>/CAR.ics</code> to your team, e.g., for the Islanders that would be <code>/NYI.ics</code>
+                  <li>Then <code>home</code> will be <code>full</code> if you chose "All Games" or <code>away</code> if you chose "Only Away Games".
+                </ol>
+                Now you can use this URL to add the calendar to your favorite calendar application.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#googleCalExample" aria-expanded="false" aria-controls="googleCalExample">
+                Adding Games to Google Calendar
+              </button>
+            </h2>
+            <div id="googleCalExample" class="accordion-collapse collapse" data-bs-parent="#calendarTutorials">
+              <div class="accordion-body">
+                At this part, you should already have a calendar URL you want to use from the previous step. For this example, we will use the URL created on our previous example: <code>{{ url_for("index") }}home/CAR.ics</code>
+                <br/>
+                This URL will contain only the home games for the Carolina Hurricanes.
+                <br/>
+                <br/>
+                <b>Adding URL to Google Calendar</b>
+                <br/>
+                First, you will want to navigate to <a target="_blank" rel="noreferrer noopener" href="https://calendar.google.com">https://calendar.google.com</a>; in there you will click on the plus-sign button next to "Other calendars" (1), like in the image below:
+                <figure class="figure">
+                  <img src="/static/img/examples/gcal-1.png" class="figure-img img-fluid rounded" alt="Google calendar UI, image indicates that you should choose the option to add another calendar.">
+                  <figcaption class="figure-caption text-end">Google calendar option to add a new calendar</figcaption>
+                </figure>
+                Then, you will choose the option to add a new calendar "From URL" (2):
+                <figure class="figure">
+                  <img src="/static/img/examples/gcal-2.png" class="figure-img img-fluid rounded" alt="Google calendar UI, image indicates that you should choose the option to add a calendar from an URL.">
+                  <figcaption class="figure-caption text-end">Adding new calendar to gcal from an URL</figcaption>
+                </figure>
+                In the new page that will show up, you will paste the calendar URL you have copied into the "URL of calendar" box (3) and click on the "Add calendar" button (4):
+                <figure class="figure">
+                  <img src="/static/img/examples/gcal-3.png" class="figure-img img-fluid rounded" alt="Google calendar UI, image shows you should use the calendar URL you created before to add a new calendar">
+                  <figcaption class="figure-caption text-end">Using the puckdex calendar URL</figcaption>
+                </figure>
+                After you click "Add calendar", a new page should show up with the settings of the calendar you just added (5), and you have the option to rename the calendar to something that makes sense to you (6):
+                <figure class="figure">
+                  <img src="/static/img/examples/gcal-4.png" class="figure-img img-fluid rounded" alt="Google calendar UI, image shows the settings of the newly created calendar where you can rename it">
+                  <figcaption class="figure-caption text-end">Renaming the puckdex calendar</figcaption>
+                </figure>
+                In this example, I named the calendar "Canes Home Games" (7); the calendar name should also update in your list of calendars (8):
+                <figure class="figure">
+                  <img src="/static/img/examples/gcal-5.png" class="figure-img img-fluid rounded" alt="Google calendar UI, image shows the settings of the newly created calendar after it has been renamed">
+                  <figcaption class="figure-caption text-end">Settings updated after calendar renaming</figcaption>
+                </figure>
+                If you go back to the home page of your calendar (<a target="_blank" rel="noreferrer noopener" href="https://calendar.google.com">https://calendar.google.com</a>), you should now see the new calendar in your list (9) and any games in your events (10):
+                <figure class="figure">
+                  <img src="/static/img/examples/gcal-6.png" class="figure-img img-fluid rounded" alt="Google calendar UI, the list of events now contain games from the newly added calendar">
+                  <figcaption class="figure-caption text-end">Calendar and games have been successfully added</figcaption>
+                </figure>
+                That's it! You have added the puckdex calendar to your Google account.
+                <br/><br/>
+                <b>Enabling puckdex calendar on mobile devices</b>
+                <br/>
+                If you want to have this calendar as an option in your mobile devices, there is one extra step you need to do: you need to tell Google to sync this calendar to your devices.
+                <br/><br/>
+                First, navigate to <a target="_blank" rel="noreferrer noopener" href="https://calendar.google.com/calendar/u/0/syncselect">https://calendar.google.com/calendar/u/0/syncselect</a>; there, you should see a page where all your calendar appear with checkboxes next to them:
+                <figure class="figure">
+                  <img src="/static/img/examples/gcal-7.png" class="figure-img img-fluid rounded" alt="Google calendar UI, showing the list of calendars that are synced to mobile devices with a checkbox next to each of them to toggle it">
+                  <figcaption class="figure-caption text-end">Syncselect changes to access puckdex calendar on mobile devices</figcaption>
+                </figure>
+                In this page, you will want to check the puckdex calendar (11) and save your changes (12). After doing this, you should be able to see your new calendar on all your devices.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="display-6">Contribute and get help</p>
+      <div class="col-lg-7 mx-auto">
+        <p class="mb-3">
+          <u>Ideas?</u> Issues and PRs are welcome at <a target="_blank" rel="noreferrer noopener" href="https://github.com/cbdm/puckdex">github.com/cbdm/puckdex</a>
+        </p>
+        <p class="mb-3">
+          <u>Need help?</u> You can shoot us a message at <a href="mailto:puckdex@cbdm.app">puckdex@cbdm.app</a>
+        </p>
+      </div>
+    </div>    
+    <div id="footer" class="container">
+        <footer class="py-3 my-4">
+            <p class="text-center text-body-secondary border-top">Made by <a target="_blank" rel="noreferrer noopener" href="https://cbdm.app/">Caio</a> <i class="bi bi-three-dots"></i> <a target="_blank" rel="noreferrer noopener" href="https://github.com/cbdm/puckdex/">Source Code</a> <i class="bi bi-three-dots"></i> Let's go Canes! </p>
+        </footer>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+      function copyCalURLToClipboard(path) {
+        let completeURL = window.location.href + path;
+        navigator.clipboard.writeText(completeURL).then(() => {
+          // Alert the user that the action took place.
+          // Nobody likes hidden stuff being done under the hood!
+          alert("Copied to clipboard");
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -8,6 +8,7 @@ from typing import Dict, List
 import requests
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from ics import Calendar, Event
 
@@ -16,8 +17,13 @@ from utils import ABBREV_TO_NAME_MAP, SCHEDULE_API_URL, CalendarType, Game, Sche
 
 app = FastAPI()
 
-# Use the absolute path for the templates folder so the webserver can find it.
+# Use the absolute path for the templates and static folder so the webserver can find it.
 templates = Jinja2Templates(directory=join(dirname(abspath(__file__)), "templates"))
+app.mount(
+    "/static",
+    StaticFiles(directory=join(dirname(abspath(__file__)), "static")),
+    name="static",
+)
 # Create a logger to help debug future issues.
 logger = logging.getLogger(getenv("LOGGER_NAME", __name__))
 
@@ -30,6 +36,12 @@ async def index(request: Request):
         name="index.html.j2",
         context={"abbrev_map": ABBREV_TO_NAME_MAP},
     )
+
+
+@app.get("/about", response_class=HTMLResponse)
+async def about(request: Request):
+    """Page with more information about the project and how to use it."""
+    return templates.TemplateResponse(request=request, name="about.html.j2")
 
 
 # Cache reponses from the NHL API so we don't have to fetch a schedule for each request.
