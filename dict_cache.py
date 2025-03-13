@@ -44,15 +44,19 @@ def cache_this(func) -> Callable[[Any], Any]:
         # Check if this method call has been cached.
         entry = cache.get(key)
         if entry:
-            logger.warning("Cache entry found for '%s'", key)
+            # Calculate how long this entry has been stored.
+            entry_age = datetime.now(timezone.utc) - entry.timestamp
+            logger.warning(
+                "Cache entry found for '%s' (cached on %s); entry's age is %s",
+                key,
+                entry.timestamp.isoformat(),
+                entry_age,
+            )
+
             # Check if the cache entry is still fresh.
-            if freshness >= (datetime.now(timezone.utc) - entry.timestamp):
-                # If it is, return the old result.
-                logger.warning(
-                    "Cache entry is fresh for '%s' (cached on %s); returning it.",
-                    key,
-                    entry.timestamp.isoformat(),
-                )
+            if freshness >= entry_age:
+                # If it is, return the stored result.
+                logger.warning("Cache entry is fresh for '%s'; returning it.", key)
                 return entry.data
 
         # If there is no fresh cache entry, call the function to get a new result.
@@ -62,9 +66,11 @@ def cache_this(func) -> Callable[[Any], Any]:
 
         except Exception as e:
             logger.exception("Error calling original function ('%s'): %s", key, e)
+
             if entry:
                 logger.warning("Returning non-fresh cache entry for '%s'", key)
                 return entry.data
+
             else:
                 logger.error("No entry exists for '%s', passing exception along.", key)
                 raise e
