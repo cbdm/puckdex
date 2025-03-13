@@ -48,9 +48,9 @@
                     Choose Type
                   </button>
                   <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" onclick="copyCalURLToClipboard('full/{{ abbrev }}.ics')"><i class="bi bi-calendar-plus"></i> All Games</a></li>
-                    <li><a class="dropdown-item" onclick="copyCalURLToClipboard('home/{{ abbrev }}.ics')"><i class="bi bi-house"/></i> Only Home Games</a></li>
-                    <li><a class="dropdown-item" onclick="copyCalURLToClipboard('away/{{ abbrev }}.ics')"><i class="bi bi-airplane"></i> Only Away Games</a></li>
+                    <li><a class="dropdown-item" onclick="copyToClipboard('{{ url_for("get_full_calendar", team_abbrev=abbrev) }}')"><i class="bi bi-calendar-plus"></i> All Games</a></li>
+                    <li><a class="dropdown-item" onclick="copyToClipboard('{{ url_for("get_home_calendar", team_abbrev=abbrev) }}')"><i class="bi bi-house"/></i> Only Home Games</a></li>
+                    <li><a class="dropdown-item" onclick="copyToClipboard('{{ url_for("get_away_calendar", team_abbrev=abbrev) }}')"><i class="bi bi-airplane"></i> Only Away Games</a></li>
                   </ul>
                 </div>
               </td>
@@ -67,9 +67,8 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
-      function copyCalURLToClipboard(path) {
-        let completeURL = window.location.href + path;
-        navigator.clipboard.writeText(completeURL).then(() => {
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
           // Alert the user that the action took place.
           // Nobody likes hidden stuff being done under the hood!
           alert("Copied to clipboard");
