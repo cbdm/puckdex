@@ -1,9 +1,10 @@
 import logging
 from datetime import datetime, timedelta, timezone
 from os import getenv
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 from pydantic import BaseModel
+from redis.asyncio import Redis
 
 from utils import UPDATE_FREQ
 
@@ -17,32 +18,46 @@ class CacheEntry(BaseModel):
     data: Any
 
 
-class DictCache:
-    """Class that acts as an in-memory cache."""
+class RedisCache:
+    """Manages the connection to our redis cache."""
 
     def __init__(self) -> None:
-        self._db: Dict[str, CacheEntry] = {}
+        self._db = Redis(
+            host=getenv("REDIS_HOST", "localhost"),
+            port=int(getenv("REDIS_PORT", "6379")),
+            username=getenv("REDIS_USERNAME", ""),
+            password=getenv("REDIS_PASSWORD", ""),
+            decode_responses=True,
+        )
 
-    def set(self, key: str, data: Any) -> None:
+    async def set(self, key: str, data: Any) -> None:
         """Store the given data in the cache."""
-        self._db[key] = CacheEntry(timestamp=datetime.now(timezone.utc), data=data)
+        await self._db.set(
+            key,
+            CacheEntry(
+                timestamp=datetime.now(timezone.utc), data=data
+            ).model_dump_json(),
+        )
 
-    def get(self, key: str) -> Optional[CacheEntry]:
+    async def get(self, key: str) -> Optional[CacheEntry]:
         """Return the stored value for the key."""
-        return self._db.get(key)
+        cached_json = await self._db.get(key)
+        if cached_json:
+            return CacheEntry.model_validate_json(cached_json)
+        return None
 
 
 def cache_this(func) -> Callable[[Any], Any]:
     """Decorator to cache method results."""
 
-    cache: DictCache = DictCache()
+    cache: RedisCache = RedisCache()
     freshness: timedelta = UPDATE_FREQ
 
     async def wrapper(*args, **kwargs):
-        key = (func.__name__, f"{args}", f"{kwargs}")
+        key = f"{func.__name__} ({args}, {kwargs})"
         logger.warning("Checking cache for '%s'", key)
         # Check if this method call has been cached.
-        entry = cache.get(key)
+        entry = await cache.get(key)
         if entry:
             # Calculate how long this entry has been stored.
             entry_age = datetime.now(timezone.utc) - entry.timestamp
@@ -76,7 +91,7 @@ def cache_this(func) -> Callable[[Any], Any]:
                 raise e
 
         # Cache the new result and return it.
-        cache.set(key, new_result)
+        await cache.set(key, new_result)
         logger.warning("Updated cache with new results for '%s'.", key)
         return new_result
 

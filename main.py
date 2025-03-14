@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from ics import Calendar, Event
 
-from dict_cache import cache_this
+from cache import cache_this
 from utils import (
     ABBREV_TO_NAME_MAP,
     SCHEDULE_API_URL,
