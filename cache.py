@@ -4,7 +4,7 @@ from os import getenv
 from typing import Any, Callable, Optional
 
 from pydantic import BaseModel
-from redis.asyncio import Redis
+from upstash_redis import Redis
 
 from utils import UPDATE_FREQ
 
@@ -23,41 +23,41 @@ class RedisCache:
 
     def __init__(self) -> None:
         self._db = Redis(
-            host=getenv("REDIS_HOST", "localhost"),
-            port=int(getenv("REDIS_PORT", "6379")),
-            username=getenv("REDIS_USERNAME", ""),
-            password=getenv("REDIS_PASSWORD", ""),
-            decode_responses=True,
+            url=getenv("REDIS_URL", "XxYyZz"),
+            token=getenv("REDIS_TOKEN", "XxYyZz"),
         )
 
-    async def set(self, key: str, data: Any) -> None:
+    def set(self, key: str, data: Any) -> None:
         """Store the given data in the cache."""
-        await self._db.set(
+        self._db.set(
             key,
             CacheEntry(
                 timestamp=datetime.now(timezone.utc), data=data
             ).model_dump_json(),
         )
 
-    async def get(self, key: str) -> Optional[CacheEntry]:
+    def get(self, key: str) -> Optional[CacheEntry]:
         """Return the stored value for the key."""
-        cached_json = await self._db.get(key)
+        cached_json = self._db.get(key)
         if cached_json:
             return CacheEntry.model_validate_json(cached_json)
         return None
 
 
+# Create a connection to our redis database.
+cache: RedisCache = RedisCache()
+
+
 def cache_this(func) -> Callable[[Any], Any]:
     """Decorator to cache method results."""
 
-    cache: RedisCache = RedisCache()
     freshness: timedelta = UPDATE_FREQ
 
     async def wrapper(*args, **kwargs):
         key = f"{func.__name__} ({args}, {kwargs})"
         logger.warning("Checking cache for '%s'", key)
         # Check if this method call has been cached.
-        entry = await cache.get(key)
+        entry = cache.get(key)
         if entry:
             # Calculate how long this entry has been stored.
             entry_age = datetime.now(timezone.utc) - entry.timestamp
@@ -91,7 +91,7 @@ def cache_this(func) -> Callable[[Any], Any]:
                 raise e
 
         # Cache the new result and return it.
-        await cache.set(key, new_result)
+        cache.set(key, new_result)
         logger.warning("Updated cache with new results for '%s'.", key)
         return new_result
 
