@@ -15,7 +15,7 @@ logging.basicConfig(format=LOGGER_FORMAT, level=LOGGER_LEVEL)
 SCHEDULE_API_URL = "https://api-web.nhle.com/v1/club-schedule-season/{team_abbrev}/now"
 
 # How often the schedule should be updated.
-UPDATE_FREQ = timedelta(days=2)
+UPDATE_FREQ = timedelta(hours=36)
 
 # Map team abbreviations to their full names.
 ABBREV_TO_NAME_MAP = {
