@@ -209,12 +209,12 @@ async def get_next_game(calendar_type: CalendarType, team: TeamAbbrev) -> Game:
     filtered_schedule = await _filter_schedule(schedule, calendar_type)
 
     # Parse through schedule and find the first game on a future date.
-    # IMPORTANT: This assumes the schedule is ordered!
-    #            As of 2025-03-13, the NHL API response is already ordered.
+    # IMPORTANT: This assumes the schedule is sorted!
+    #            As of 2025-03-16, the NHL API response is already sorted.
     now = datetime.now(timezone.utc)
     for game in filtered_schedule.games:
-        if datetime.fromisoformat(game.start_utc_timestamp) > now:
-            # Return the first game on a future date.
+        if (datetime.fromisoformat(game.start_utc_timestamp) + game.length) > now:
+            # Return the first game that ends on a future date.
             return game
 
     # There are no games on a future date, we don't know when is the next one.
@@ -246,13 +246,14 @@ async def get_last_game(calendar_type: CalendarType, team: TeamAbbrev) -> Game:
         start_utc_timestamp="1970-01-01T00:00:00Z",
     )
 
-    # Parse through schedule and find the past game that is closest to current date.
-    # IMPORTANT: This assumes the schedule is ordered!
-    #            As of 2025-03-13, the NHL API response is already ordered.
+    # Parse through schedule and find the past game that ended the closest to current date.
+    # IMPORTANT: This assumes the schedule is sorted!
+    #            As of 2025-03-16, the NHL API response is already sorted.
     now = datetime.now(timezone.utc)
     i = 0
-    while i < len(filtered_schedule.games) and now > datetime.fromisoformat(
-        filtered_schedule.games[i].start_utc_timestamp
+    while i < len(filtered_schedule.games) and now > (
+        datetime.fromisoformat(filtered_schedule.games[i].start_utc_timestamp)
+        + filtered_schedule.games[i].length
     ):
         last_game = filtered_schedule.games[i]
         i += 1
