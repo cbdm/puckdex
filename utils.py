@@ -46,7 +46,7 @@ ABBREV_TO_NAME_MAP = {
     "STL": "St. Louis Blues",
     "TBL": "Tampa Bay Lightning",
     "TOR": "Toronto Maple Leafs",
-    "UTA": "Utah Utah Hockey Club",
+    "UTA": "Utah Hockey Club",
     "VAN": "Vancouver Canucks",
     "VGK": "Vegas Golden Knights",
     "WPG": "Winnipeg Jets",
