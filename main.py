@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from os import getenv
 from os.path import abspath, dirname, join
 from typing import Dict, List
+from zoneinfo import ZoneInfo
 
 import requests
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -179,8 +180,8 @@ async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Res
 
         # Create calendar event.
         event = Event()
-        event.name = game_info
-        event.begin = game.start_utc_timestamp
+        event.summary = game_info
+        event.begin = datetime.fromisoformat(game.start_utc_timestamp)
         event.duration = game.length
         if game.venue:
             event.location = game.venue
@@ -188,7 +189,7 @@ async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Res
             event.description = extra_info.strip()
 
         # Add event to calendar.
-        cal.events.add(event)
+        cal.events.append(event)
 
     # Return the calendar in ics format.
     return Response(content=cal.serialize(), media_type="text/calendar")
