@@ -197,11 +197,8 @@ async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Res
         if extra_info:
             event.add("description", extra_info.strip())
 
-        local_uid = f"{dtstamp}_{start_dt}_{game_info}".replace(" ", "")
-        event.add(
-            "uid",
-            f"{local_uid}@puckdex.cbdm.app",
-        )
+        local_uid = f"{dtstamp}_{start_dt}_{home_team}_{away_team}".replace(" ", "")
+        event.add("uid", f"{local_uid}@puckdex.cbdm.app")
 
         # Add event to calendar.
         cal.add_component(event)
