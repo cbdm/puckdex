@@ -4,7 +4,7 @@ email-validator==2.2.0
 fastapi-cache2==0.2.2
 fastapi-cli==0.0.7
 httptools==0.6.4
-ics==0.8.0.dev0
+icalendar==6.2.0
 importlib-metadata==8.0.0
 inflect==7.3.1
 jaraco.collections==5.1.0

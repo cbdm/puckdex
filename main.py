@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from ics import Calendar, Event
+from icalendar import Calendar, Event
 
 from cache import cache_this
 from utils import (
@@ -157,14 +157,21 @@ async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Res
     """Create and return an ics calendar with the given team's schedule."""
     logger.warning("Creating fresh %s calendar for %s", cal_type.name, team.name)
 
-    # Create empty calendar.
+    # Create empty calendar with required properties.
     cal = Calendar()
+    cal.add("prodid", "-//Puckdex//puckdex.cbdm.app//EN")
+    cal.add("version", "2.0")
+    cal.add("METHOD", "PUBLISH")
+    calname = f"{ABBREV_TO_NAME_MAP.get(team.name, team.name)} - {cal_type.name} Calendar".title()
+    cal.add("X-WR-CALNAME", calname)
+    cal.add("X-WR-TIMEZONE", "UTC")
 
     # Get schedule data.
     schedule = await _create_fresh_schedule(team)
     filtered_schedule = await _filter_schedule(schedule, cal_type)
 
     # Add one calendar event for each scheduled game.
+    dtstamp = datetime.now(tz=ZoneInfo("UTC"))
     for game in filtered_schedule.games:
         # Format game information.
         home_team = game.home_team_name
@@ -180,19 +187,27 @@ async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Res
 
         # Create calendar event.
         event = Event()
-        event.summary = game_info
-        event.begin = datetime.fromisoformat(game.start_utc_timestamp)
-        event.duration = game.length
+        start_dt = datetime.fromisoformat(game.start_utc_timestamp)
+        event.add("summary", game_info)
+        event.add("dtstamp", dtstamp)
+        event.add("dtstart", start_dt)
+        event.add("dtend", start_dt + game.length)
         if game.venue:
-            event.location = game.venue
+            event.add("location", game.venue)
         if extra_info:
-            event.description = extra_info.strip()
+            event.add("description", extra_info.strip())
+
+        local_uid = f"{dtstamp}_{start_dt}_{game_info}".replace(" ", "")
+        event.add(
+            "uid",
+            f"{local_uid}@puckdex.cbdm.app",
+        )
 
         # Add event to calendar.
-        cal.events.append(event)
+        cal.add_component(event)
 
     # Return the calendar in ics format.
-    return Response(content=cal.serialize(), media_type="text/calendar")
+    return Response(content=cal.to_ical().decode("utf-8"), media_type="text/calendar")
 
 
 @app.get("/{calendar_type}/{team}.ics", response_class=FileResponse)
