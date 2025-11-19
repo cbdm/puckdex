@@ -14,7 +14,7 @@ from fastapi.templating import Jinja2Templates
 from icalendar import Calendar, Event
 
 from cache import cache_this
-from counters import count_this
+from counters import count_this, get_team_calendar_counts
 from utils import (
     ABBREV_TO_NAME_MAP,
     SCHEDULE_API_URL,
@@ -43,7 +43,10 @@ async def index(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="index.html.j2",
-        context={"abbrev_map": ABBREV_TO_NAME_MAP},
+        context={
+            "abbrev_map": ABBREV_TO_NAME_MAP,
+            "counts": get_team_calendar_counts(),
+        },
     )
 
 

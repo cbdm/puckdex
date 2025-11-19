@@ -1,6 +1,7 @@
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Dict
 from functools import wraps
+from collections import defaultdict
 from os import getenv
 
 # Use the redis cache to hold the counts.
@@ -29,3 +30,22 @@ def count_this(func) -> Callable[[Any], Any]:
         return await func(*args, **kwargs)
 
     return wrapper
+
+
+def get_team_calendar_counts() -> defaultdict[str, int]:
+    """Parse the counts of each team/type calendar from the database."""
+    counts: defaultdict[str, int] = defaultdict(int)
+    # Get all counts that match the pattern of a team-type count.
+    for k, v in cache.get_raw_values("\[COUNT\] ???-????-*").items():
+        try:
+            # Convert the count into a number so we can use it.
+            new_count = int(v)
+            # Keep track of each team-type's count separately.
+            counts[k[8:16]] = new_count
+            # But also accumulate it into a team's total count.
+            counts[k[8:12] + "TOTAL"] += new_count
+        except ValueError:
+            # We don't expect value errors since we're filtering by count keys, but no harm in checking.
+            # Also, since we're using a defaultdict, a count of 0 is already implied in case of error.
+            continue
+    return counts

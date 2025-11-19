@@ -53,11 +53,38 @@
                 <div class="dropdown">
                   <button class="btn btn-danger btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Choose Type
+                    <span class="badge bg-light-subtle text-light-emphasis rounded-pill">
+                      {{ "{:,d}".format(counts[abbrev.upper() + "-TOTAL"]) }}
+                    </span>
                   </button>
                   <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" onclick="copyToClipboard('{{ url_for("get_calendar", calendar_type="full", team=abbrev) }}')"><i class="bi bi-calendar-plus"></i> All Games</a></li>
-                    <li><a class="dropdown-item" onclick="copyToClipboard('{{ url_for("get_calendar", calendar_type="home", team=abbrev) }}')"><i class="bi bi-house"/></i> Only Home Games</a></li>
-                    <li><a class="dropdown-item" onclick="copyToClipboard('{{ url_for("get_calendar", calendar_type="away", team=abbrev) }}')"><i class="bi bi-airplane"></i> Only Away Games</a></li>
+                    <li>
+                      <a class="dropdown-item" onclick="copyToClipboard('{{ url_for("get_calendar", calendar_type="full", team=abbrev) }}')">
+                        <i class="bi bi-calendar-plus"></i>
+                        All Games
+                        <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">
+                          {{ "{:,d}".format(counts[abbrev.upper() + "-FULL"]) }}
+                        </span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" onclick="copyToClipboard('{{ url_for("get_calendar", calendar_type="home", team=abbrev) }}')">
+                        <i class="bi bi-house"/></i>
+                        Only Home Games
+                        <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">
+                          {{ "{:,d}".format(counts[abbrev.upper() + "-HOME"]) }}
+                        </span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" onclick="copyToClipboard('{{ url_for("get_calendar", calendar_type="away", team=abbrev) }}')">
+                        <i class="bi bi-airplane"></i>
+                        Only Away Games
+                        <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">
+                          {{ "{:,d}".format(counts[abbrev.upper() + "-AWAY"]) }}
+                        </span>
+                      </a>
+                    </li>
                   </ul>
                 </div>
               </td>

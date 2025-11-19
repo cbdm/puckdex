@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 from os import getenv
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from pydantic import BaseModel
 from upstash_redis import Redis
@@ -42,6 +42,20 @@ class RedisCache:
         if cached_json:
             return CacheEntry.model_validate_json(cached_json)
         return None
+
+    def get_raw_values(self, key_pattern: str) -> Dict[Any, Any]:
+        """Return values for keys that match the given pattern without processing/validating."""
+        # Finds all keys that match the pattern.
+        keys_found: List[str] = []
+        cursor = 0
+        while True:
+            cursor, keys = self._db.scan(cursor, match=key_pattern)
+            keys_found.extend(keys)
+            if cursor == 0:
+                # no more keys to find
+                break
+        # Get the value for each key we found.
+        return {k: self._db.get(k) for k in keys_found}
 
     def incr(self, key: str) -> int:
         """Increase and return the count for specified key."""
