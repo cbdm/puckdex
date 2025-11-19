@@ -23,8 +23,8 @@ class RedisCache:
 
     def __init__(self) -> None:
         self._db = Redis(
-            url=getenv("REDIS_URL", "XxYyZz"),
-            token=getenv("REDIS_TOKEN", "XxYyZz"),
+            url=getenv("REDIS_URL", "http://localhost:8079"),
+            token=getenv("REDIS_TOKEN", "example_token"),
         )
 
     def set(self, key: str, data: Any) -> None:
