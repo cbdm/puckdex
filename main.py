@@ -52,8 +52,6 @@ async def about(request: Request):
     return templates.TemplateResponse(request=request, name="about.html.j2")
 
 
-# Cache reponses from the NHL API so we don't have to fetch a schedule for each request.
-@cache_this
 async def _fetch_schedule(team: TeamAbbrev) -> Dict:
     """Fetch the team schedule from the NHL API and parse the JSON response into a dict."""
     logger.warning("Requesting schedule for %s from NHL API.", team.name)
@@ -117,10 +115,15 @@ async def _parse_schedule(team: TeamAbbrev, data: Dict) -> Schedule:
     )
 
 
-async def _create_fresh_schedule(team: TeamAbbrev) -> Schedule:
-    """Create and return a Schedule with current data for the team."""
+# Cache created schedules so we don't have to fetch and parse data from the NHL API for each request.
+@cache_this(
+    store_transform=Schedule.model_dump_json,
+    load_transform=Schedule.model_validate_json,
+)
+async def _create_complete_schedule(team: TeamAbbrev) -> Schedule:
+    """Create and return a Schedule with all data for the team."""
     api_json_response = await _fetch_schedule(team)
-    return await _parse_schedule(team, api_json_response)  # type: ignore[arg-type]
+    return await _parse_schedule(team, api_json_response)
 
 
 async def _filter_schedule(s: Schedule, cal_type: CalendarType) -> Schedule:
@@ -166,8 +169,8 @@ async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Res
     cal.add("X-WR-CALNAME", calname)
     cal.add("X-WR-TIMEZONE", "UTC")
 
-    # Get schedule data.
-    schedule = await _create_fresh_schedule(team)
+    # Get and filter team's schedule.
+    schedule = await _create_complete_schedule(team)
     filtered_schedule = await _filter_schedule(schedule, cal_type)
 
     # Add one calendar event for each scheduled game.
@@ -219,8 +222,8 @@ async def get_next_game(calendar_type: CalendarType, team: TeamAbbrev) -> Game:
     """Return information for the next game in the team's full/home/away calendar."""
     logger.warning("Received request for the next %s game for %s", calendar_type, team)
 
-    # Get a current schedule for the team.
-    schedule = await _create_fresh_schedule(team)
+    # Get and filter team's schedule.
+    schedule = await _create_complete_schedule(team)
     filtered_schedule = await _filter_schedule(schedule, calendar_type)
 
     # Parse through schedule and find the first game on a future date.
@@ -248,8 +251,8 @@ async def get_last_game(calendar_type: CalendarType, team: TeamAbbrev) -> Game:
     """Return information for the most recent game in the team's full/home/away calendar."""
     logger.warning("Received request for the last %s game for %s", calendar_type, team)
 
-    # Get a current schedule for the team.
-    schedule = await _create_fresh_schedule(team)
+    # Get and filter team's schedule.
+    schedule = await _create_complete_schedule(team)
     filtered_schedule = await _filter_schedule(schedule, calendar_type)
 
     # Create a dummy game in case we don't find a past game in the schedule.

@@ -48,51 +48,60 @@ class RedisCache:
 cache: RedisCache = RedisCache()
 
 
-def cache_this(func) -> Callable[[Any], Any]:
-    """Decorator to cache method results."""
+def cache_this(store_transform=(lambda x: x), load_transform=(lambda x: x)):
+    """Create a decorator that can transform the result before/after db operations."""
 
-    freshness: timedelta = UPDATE_FREQ
+    def cache_decorator(func) -> Callable[[Any], Any]:
+        """Real decorator to cache method results."""
 
-    async def wrapper(*args, **kwargs):
-        key = f"{func.__name__} ({args}, {kwargs})"
-        logger.warning("Checking cache for '%s'", key)
-        # Check if this method call has been cached.
-        entry = cache.get(key)
-        if entry:
-            # Calculate how long this entry has been stored.
-            entry_age = datetime.now(timezone.utc) - entry.timestamp
-            logger.warning(
-                "Cache entry found for '%s' (cached on %s); entry's age is %s",
-                key,
-                entry.timestamp.isoformat(),
-                entry_age,
-            )
+        freshness: timedelta = UPDATE_FREQ
 
-            # Check if the cache entry is still fresh.
-            if freshness >= entry_age:
-                # If it is, return the stored result.
-                logger.warning("Cache entry is fresh for '%s'; returning it.", key)
-                return entry.data
-
-        # If there is no fresh cache entry, call the function to get a new result.
-        logger.warning("No fresh cache entry for '%s'; calling original function.", key)
-        try:
-            new_result = await func(*args, **kwargs)
-
-        except Exception as e:
-            logger.exception("Error calling original function ('%s'): %s", key, e)
-
+        async def wrapper(*args, **kwargs):
+            key = f"{func.__name__} ({args}, {kwargs})"
+            logger.info("Checking cache for '%s'", key)
+            # Check if this method call has been cached.
+            entry = cache.get(key)
             if entry:
-                logger.warning("Returning non-fresh cache entry for '%s'", key)
-                return entry.data
+                # Calculate how long this entry has been stored.
+                entry_age = datetime.now(timezone.utc) - entry.timestamp
+                logger.info(
+                    "Cache entry found for '%s' (cached on %s); entry's age is %s",
+                    key,
+                    entry.timestamp.isoformat(),
+                    entry_age,
+                )
 
-            else:
-                logger.error("No entry exists for '%s', passing exception along.", key)
-                raise e
+                # Check if the cache entry is still fresh.
+                if freshness >= entry_age:
+                    # If it is, return the stored result.
+                    logger.info("Cache entry is fresh for '%s'; returning it.", key)
+                    return load_transform(entry.data)
 
-        # Cache the new result and return it.
-        cache.set(key, new_result)
-        logger.warning("Updated cache with new results for '%s'.", key)
-        return new_result
+            # If there is no fresh cache entry, call the function to get a new result.
+            logger.info(
+                "No fresh cache entry for '%s'; calling original function.", key
+            )
+            try:
+                new_result = await func(*args, **kwargs)
 
-    return wrapper
+            except Exception as e:
+                logger.exception("Error calling original function ('%s'): %s", key, e)
+
+                if entry:
+                    logger.info("Returning non-fresh cache entry for '%s'", key)
+                    return entry.data
+
+                else:
+                    logger.error(
+                        "No entry exists for '%s', passing exception along.", key
+                    )
+                    raise e
+
+            # Cache the new result and return it.
+            cache.set(key, store_transform(new_result))
+            logger.info("Updated cache with new results for '%s'.", key)
+            return new_result
+
+        return wrapper
+
+    return cache_decorator
