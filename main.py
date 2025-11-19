@@ -14,6 +14,7 @@ from fastapi.templating import Jinja2Templates
 from icalendar import Calendar, Event
 
 from cache import cache_this
+from counters import count_this
 from utils import (
     ABBREV_TO_NAME_MAP,
     SCHEDULE_API_URL,
@@ -54,7 +55,7 @@ async def about(request: Request):
 
 async def _fetch_schedule(team: TeamAbbrev) -> Dict:
     """Fetch the team schedule from the NHL API and parse the JSON response into a dict."""
-    logger.warning("Requesting schedule for %s from NHL API.", team.name)
+    logger.info("Requesting schedule for %s from NHL API.", team.name)
     response = requests.get(SCHEDULE_API_URL.format(team_abbrev=team.name), timeout=120)
     if not response.status_code == 200:
         raise HTTPException(
@@ -66,7 +67,7 @@ async def _fetch_schedule(team: TeamAbbrev) -> Dict:
 
 async def _parse_schedule(team: TeamAbbrev, data: Dict) -> Schedule:
     """Parse the schedule information from the NHL API JSON response."""
-    logger.warning("Parsing NHL response to create schedule for %s", team.name)
+    logger.info("Parsing NHL response to create schedule for %s", team.name)
 
     games: List[Game] = []
     for game in data["games"]:
@@ -138,7 +139,6 @@ async def _filter_schedule(s: Schedule, cal_type: CalendarType) -> Schedule:
             team=s.team,
             season=s.season,
             timestamp=s.timestamp,
-            # Ignore non-home games for home-only calendars.
             games=[g for g in s.games if g.home_team_abbrev == s.team],
         )
 
@@ -158,7 +158,7 @@ async def _filter_schedule(s: Schedule, cal_type: CalendarType) -> Schedule:
 
 async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Response:
     """Create and return an ics calendar with the given team's schedule."""
-    logger.warning("Creating fresh %s calendar for %s", cal_type.name, team.name)
+    logger.info("Creating fresh %s calendar for %s", cal_type.name, team.name)
 
     # Create empty calendar with required properties.
     cal = Calendar()
@@ -211,16 +211,18 @@ async def create_fresh_calendar(team: TeamAbbrev, cal_type: CalendarType) -> Res
 
 
 @app.get("/{calendar_type}/{team}.ics", response_class=FileResponse)
+@count_this
 async def get_calendar(calendar_type: CalendarType, team: TeamAbbrev) -> Response:
     """Return an .ics calendar of the specified type and team in the current NHL season."""
-    logger.warning("Received request of %s for %s", calendar_type, team)
+    logger.info("Received request of %s for %s", calendar_type, team)
     return await create_fresh_calendar(team, calendar_type)
 
 
 @app.get("/next/{calendar_type}/{team}")
+@count_this
 async def get_next_game(calendar_type: CalendarType, team: TeamAbbrev) -> Game:
     """Return information for the next game in the team's full/home/away calendar."""
-    logger.warning("Received request for the next %s game for %s", calendar_type, team)
+    logger.info("Received request for the next %s game for %s", calendar_type, team)
 
     # Get and filter team's schedule.
     schedule = await _create_complete_schedule(team)
@@ -247,10 +249,10 @@ async def get_next_game(calendar_type: CalendarType, team: TeamAbbrev) -> Game:
 
 
 @app.get("/last/{calendar_type}/{team}")
+@count_this
 async def get_last_game(calendar_type: CalendarType, team: TeamAbbrev) -> Game:
     """Return information for the most recent game in the team's full/home/away calendar."""
-    logger.warning("Received request for the last %s game for %s", calendar_type, team)
-
+    logger.info("Received request for the last %s game for %s", calendar_type, team)
     # Get and filter team's schedule.
     schedule = await _create_complete_schedule(team)
     filtered_schedule = await _filter_schedule(schedule, calendar_type)

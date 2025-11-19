@@ -43,6 +43,10 @@ class RedisCache:
             return CacheEntry.model_validate_json(cached_json)
         return None
 
+    def incr(self, key: str) -> int:
+        """Increase and return the count for specified key."""
+        return self._db.incr(key)
+
 
 # Create a connection to our redis database.
 cache: RedisCache = RedisCache()
@@ -57,7 +61,7 @@ def cache_this(store_transform=(lambda x: x), load_transform=(lambda x: x)):
         freshness: timedelta = UPDATE_FREQ
 
         async def wrapper(*args, **kwargs):
-            key = f"{func.__name__} ({args}, {kwargs})"
+            key = f"[RESULT] {func.__name__} ({args}, {kwargs})"
             logger.info("Checking cache for '%s'", key)
             # Check if this method call has been cached.
             entry = cache.get(key)
