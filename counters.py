@@ -41,7 +41,7 @@ def get_team_calendar_counts() -> defaultdict[str, int]:
             # Convert the count into a number so we can use it.
             new_count = int(v)
             # Keep track of each team-type's count separately.
-            counts[k[8:16]] = new_count
+            counts[k[8:16]] += new_count
             # But also accumulate it into a team's total count.
             counts[k[8:12] + "TOTAL"] += new_count
         except ValueError:
