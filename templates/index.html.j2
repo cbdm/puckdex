@@ -54,7 +54,7 @@
                   <button class="btn btn-danger btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Choose Type
                     <span class="badge bg-light-subtle text-light-emphasis rounded-pill">
-                      {{ "{:,d}".format(counts[abbrev.upper() + "-TOTAL"]) }}
+                      {{ counts.get(abbrev.upper()) | int }}
                       <i class="bi bi-download"></i>
                     </span>
                   </button>
@@ -64,7 +64,7 @@
                         <i class="bi bi-calendar-plus"></i>
                         All Games
                         <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">
-                          {{ "{:,d}".format(counts[abbrev.upper() + "-FULL"]) }}
+                          {{ counts.get(abbrev.upper() + "-FULL") | int }}
                           <i class="bi bi-download"></i>
                         </span>
                       </a>
@@ -74,7 +74,7 @@
                         <i class="bi bi-house"/></i>
                         Only Home Games
                         <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">
-                          {{ "{:,d}".format(counts[abbrev.upper() + "-HOME"]) }}
+                          {{ counts.get(abbrev.upper() + "-HOME") | int }}
                           <i class="bi bi-download"></i>
                         </span>
                       </a>
@@ -84,7 +84,7 @@
                         <i class="bi bi-airplane"></i>
                         Only Away Games
                         <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">
-                          {{ "{:,d}".format(counts[abbrev.upper() + "-AWAY"]) }}
+                          {{ counts.get(abbrev.upper() + "-AWAY") | int }}
                           <i class="bi bi-download"></i>
                         </span>
                       </a>

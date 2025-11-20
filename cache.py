@@ -61,6 +61,14 @@ class RedisCache:
         """Increase and return the count for specified key."""
         return self._db.incr(key)
 
+    def set_field_incr(self, key: str, field: str, increment: int = 1) -> int:
+        """Increase and return the value of field inside the key set by increment."""
+        return self._db.hincrby(key, field, increment)
+
+    def get_set(self, key: str) -> Dict:
+        """Return all field/value pairs in the key set."""
+        return self._db.hgetall(key)
+
 
 # Create a connection to our redis database.
 cache: RedisCache = RedisCache()
