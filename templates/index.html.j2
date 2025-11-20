@@ -55,6 +55,7 @@
                     Choose Type
                     <span class="badge bg-light-subtle text-light-emphasis rounded-pill">
                       {{ "{:,d}".format(counts[abbrev.upper() + "-TOTAL"]) }}
+                      <i class="bi bi-download"></i>
                     </span>
                   </button>
                   <ul class="dropdown-menu">
@@ -64,6 +65,7 @@
                         All Games
                         <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">
                           {{ "{:,d}".format(counts[abbrev.upper() + "-FULL"]) }}
+                          <i class="bi bi-download"></i>
                         </span>
                       </a>
                     </li>
@@ -73,6 +75,7 @@
                         Only Home Games
                         <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">
                           {{ "{:,d}".format(counts[abbrev.upper() + "-HOME"]) }}
+                          <i class="bi bi-download"></i>
                         </span>
                       </a>
                     </li>
@@ -82,6 +85,7 @@
                         Only Away Games
                         <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">
                           {{ "{:,d}".format(counts[abbrev.upper() + "-AWAY"]) }}
+                          <i class="bi bi-download"></i>
                         </span>
                       </a>
                     </li>
